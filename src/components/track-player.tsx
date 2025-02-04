@@ -1,8 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import { VideoSearchResult, formatDuration, getVideoDetails } from "@/lib/youtube";
+import { crossfaderValueAtom } from "@/store/atoms";
 import { Pause, Play, RotateCw, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
 import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
+import { useRecoilValue } from "recoil";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -15,7 +17,6 @@ interface TrackPlayerProps {
   url: string;
   onUrlChange: (url: string) => void;
   playerRef: React.RefObject<YouTube>;
-  crossfaderValue: number;
   isLeftTrack: boolean;
 }
 
@@ -24,7 +25,6 @@ export function TrackPlayer({
   url,
   onUrlChange,
   playerRef,
-  crossfaderValue,
   isLeftTrack,
 }: TrackPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -34,6 +34,7 @@ export function TrackPlayer({
   const [videoDetails, setVideoDetails] = useState<VideoSearchResult | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState([1]);
+  const crossfaderValue = useRecoilValue(crossfaderValueAtom);
 
   const getYouTubeID = (url: string) => {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;

@@ -7,7 +7,6 @@ import YouTube from "react-youtube";
 export default function Home() {
   const [track1URL, setTrack1URL] = useState("");
   const [track2URL, setTrack2URL] = useState("");
-  const [crossfadeValue, setCrossfadeValue] = useState([50]);
 
   const player1Ref = useRef<YouTube | null>(null);
   const player2Ref = useRef<YouTube | null>(null);
@@ -23,7 +22,6 @@ export default function Home() {
             url={track1URL}
             onUrlChange={setTrack1URL}
             playerRef={player1Ref}
-            crossfaderValue={crossfadeValue[0]}
             isLeftTrack={true}
           />
 
@@ -32,14 +30,11 @@ export default function Home() {
             url={track2URL}
             onUrlChange={setTrack2URL}
             playerRef={player2Ref}
-            crossfaderValue={crossfadeValue[0]}
             isLeftTrack={false}
           />
         </div>
 
         <Crossfader
-          value={crossfadeValue}
-          onValueChange={setCrossfadeValue}
           player1Ref={player1Ref}
           player2Ref={player2Ref}
         />

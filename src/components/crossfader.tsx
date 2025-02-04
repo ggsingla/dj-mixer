@@ -1,28 +1,27 @@
+import { crossfaderValueAtom } from "@/store/atoms";
 import { useEffect, useRef, useState } from "react";
 import YouTube from "react-youtube";
+import { useRecoilState } from "recoil";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Slider } from "./ui/slider";
 
 interface CrossfaderProps {
-  value: number[];
-  onValueChange: (value: number[]) => void;
   player1Ref: React.RefObject<YouTube>;
   player2Ref: React.RefObject<YouTube>;
 }
 
 export function Crossfader({
-  value,
-  onValueChange,
   player1Ref,
   player2Ref,
 }: CrossfaderProps) {
   const [targetValue, setTargetValue] = useState<number | null>(null);
   const animationRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
+  const [crossfaderValue, setCrossfaderValue] = useRecoilState(crossfaderValueAtom);
 
   const handleCrossfade = (newValue: number[]) => {
-    onValueChange(newValue);
+    setCrossfaderValue(newValue[0]);
     if (player1Ref.current && player2Ref.current) {
       const vol1 = (100 - newValue[0]) / 100;
       const vol2 = newValue[0] / 100;
@@ -36,11 +35,9 @@ export function Crossfader({
 
     const deltaTime = currentTime - lastTimeRef.current;
     lastTimeRef.current = currentTime;
-
-    const currentValue = value[0];
+    const currentValue = crossfaderValue;
     const diff = targetValue - currentValue;
-    // Speed is now controlled by pixels per millisecond
-    const speed = 0.05; // Adjust this value to change animation speed
+    const speed = 0.05;
     const step = Math.sign(diff) * Math.min(Math.abs(diff), speed * deltaTime);
 
     if (Math.abs(diff) > 0.1) {
@@ -63,7 +60,7 @@ export function Crossfader({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [targetValue, value]); // Added value to dependencies
+  }, [targetValue, crossfaderValue]);
 
   const handleTrackButton = (target: number) => {
     if (animationRef.current) {
@@ -94,7 +91,7 @@ export function Crossfader({
             </Button>
           </div>
           <Slider
-            value={value}
+            value={[crossfaderValue]}
             onValueChange={handleCrossfade}
             max={100}
             step={5}
