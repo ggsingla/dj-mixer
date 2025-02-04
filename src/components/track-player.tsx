@@ -15,6 +15,8 @@ interface TrackPlayerProps {
   url: string;
   onUrlChange: (url: string) => void;
   playerRef: React.RefObject<YouTube>;
+  crossfaderValue: number;
+  isLeftTrack: boolean;
 }
 
 export function TrackPlayer({
@@ -22,6 +24,8 @@ export function TrackPlayer({
   url,
   onUrlChange,
   playerRef,
+  crossfaderValue,
+  isLeftTrack,
 }: TrackPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -62,6 +66,16 @@ export function TrackPlayer({
     loadVideoDetails();
   }, [url]);
 
+  const calculateVolume = () => {
+    if (isMuted) return 0;
+    // For left track (Track 1), volume decreases as crossfader value increases
+    if (isLeftTrack) {
+      return ((100 - crossfaderValue) / 100) * 100;
+    }
+    // For right track (Track 2), volume increases as crossfader value increases
+    return (crossfaderValue / 100) * 100;
+  };
+
   const handlePlayPause = async () => {
     if (playerRef.current?.internalPlayer) {
       try {
@@ -70,6 +84,8 @@ export function TrackPlayer({
           await playerRef.current.internalPlayer.pauseVideo();
         } else {
           await playerRef.current.internalPlayer.playVideo();
+          // Set correct volume based on crossfader position when starting playback
+          await playerRef.current.internalPlayer.setVolume(calculateVolume());
         }
       } catch (error) {
         console.error('Error controlling playback:', error);
@@ -193,9 +209,12 @@ export function TrackPlayer({
                 if (event.data === 0) {
                   handleReset();
                 }
+                // Update volume whenever state changes (in case of autoplay or other state changes)
+                event.target.setVolume(calculateVolume());
               }}
               onReady={(event: YouTubeEvent<YouTubePlayer>) => {
-                event.target.setVolume(isMuted ? 0 : 100);
+                // Set initial volume based on crossfader position
+                event.target.setVolume(calculateVolume());
                 const dur = event.target.getDuration();
                 setDuration(dur);
               }}

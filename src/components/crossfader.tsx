@@ -9,8 +9,6 @@ interface CrossfaderProps {
   onValueChange: (value: number[]) => void;
   player1Ref: React.RefObject<YouTube>;
   player2Ref: React.RefObject<YouTube>;
-  volume1: number[];
-  volume2: number[];
 }
 
 export function Crossfader({
@@ -18,8 +16,6 @@ export function Crossfader({
   onValueChange,
   player1Ref,
   player2Ref,
-  volume1,
-  volume2,
 }: CrossfaderProps) {
   const [targetValue, setTargetValue] = useState<number | null>(null);
   const animationRef = useRef<number>();
@@ -28,8 +24,8 @@ export function Crossfader({
   const handleCrossfade = (newValue: number[]) => {
     onValueChange(newValue);
     if (player1Ref.current && player2Ref.current) {
-      const vol1 = ((100 - newValue[0]) / 100) * (volume1[0] / 100);
-      const vol2 = (newValue[0] / 100) * (volume2[0] / 100);
+      const vol1 = (100 - newValue[0]) / 100;
+      const vol2 = newValue[0] / 100;
       player1Ref.current.internalPlayer.setVolume(vol1 * 100);
       player2Ref.current.internalPlayer.setVolume(vol2 * 100);
     }
