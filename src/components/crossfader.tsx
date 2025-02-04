@@ -1,8 +1,8 @@
+import { useEffect, useRef, useState } from "react";
+import YouTube from "react-youtube";
+import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Slider } from "./ui/slider";
-import { Button } from "./ui/button";
-import YouTube from "react-youtube";
-import { useEffect, useRef, useState } from "react";
 
 interface CrossfaderProps {
   value: number[];
@@ -101,7 +101,7 @@ export function Crossfader({
             value={value}
             onValueChange={handleCrossfade}
             max={100}
-            step={1}
+            step={5}
             className="my-4"
           />
           <div className="flex justify-between text-sm text-muted-foreground">

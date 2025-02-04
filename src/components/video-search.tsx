@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client"
 import useDebounce from "@/hooks/useDebounce";
-import { VideoSearchResult, searchVideos } from "@/lib/youtube";
-import { Plus } from "lucide-react";
+import { VideoSearchResult, getYouTubeID, searchVideos } from "@/lib/youtube";
+import { Link, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "./ui/command";
+import { Input } from "./ui/input";
 import {
   Popover,
   PopoverContent,
@@ -29,6 +30,7 @@ export function VideoSearch({ onVideoSelect }: VideoSearchProps) {
   const [searchResults, setSearchResults] = useState<VideoSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<VideoSearchResult | null>(null);
+  const [urlInput, setUrlInput] = useState("");
 
   const debouncedSearchQuery = useDebounce(searchQuery, 350);
 
@@ -44,6 +46,36 @@ export function VideoSearch({ onVideoSelect }: VideoSearchProps) {
       setSearchResults(results);
     } catch (error) {
       console.error('Error searching videos:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUrlSubmit = async () => {
+    if (!urlInput.trim()) return;
+
+    const videoId = getYouTubeID(urlInput);
+    if (!videoId) {
+      alert("Invalid YouTube URL");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/youtube/video?id=${videoId}`);
+      const videoDetails = await response.json();
+
+      if (response.ok) {
+        setSelectedVideo(videoDetails);
+        onVideoSelect(videoDetails);
+        setOpen(false);
+        setUrlInput("");
+      } else {
+        throw new Error(videoDetails.error);
+      }
+    } catch (error) {
+      console.error('Error fetching video details:', error);
+      alert("Failed to load video details");
     } finally {
       setIsLoading(false);
     }
@@ -80,11 +112,36 @@ export function VideoSearch({ onVideoSelect }: VideoSearchProps) {
         </PopoverTrigger>
         <PopoverContent className="w-[500px] p-0">
           <Command shouldFilter={false}>
+            <div className="flex items-center gap-2 p-2 border-b">
+              <Link className="size-4 mx-2 opacity-50" />
+              <Input
+                type="text"
+                placeholder="Paste YouTube URL..."
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                className="flex-1 h-8 text-sm border-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleUrlSubmit();
+                  }
+                }}
+              />
+              <Button
+                size="icon"
+                variant='outline'
+                onClick={handleUrlSubmit}
+                disabled={isLoading}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+
+
             <CommandInput
               placeholder="Type to search..."
               value={searchQuery}
               onValueChange={setSearchQuery}
-              className="h-9"
+              autoFocus
             />
             <CommandList>
               <CommandEmpty>

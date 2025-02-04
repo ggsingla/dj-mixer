@@ -129,6 +129,7 @@ export function TrackPlayer({
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatDuration(videoDetails.duration)}</span>
               </div>
+
               <Slider
                 value={seekValue}
                 onValueChange={handleSeek}
@@ -151,7 +152,9 @@ export function TrackPlayer({
                   autoplay: 0,
                   rel: 0,
                   modestbranding: 1,
-                  origin: window.location.origin,
+                  origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+                  enablejsapi: 1,
+                  playsinline: 1
                 },
                 width: '100%',
                 height: '100%',
@@ -162,6 +165,9 @@ export function TrackPlayer({
                   const dur = event.target.getDuration();
                   setDuration(dur);
                 }
+                if (event.data === 0) {
+                  handleReset();
+                }
               }}
               onReady={(event: YouTubeEvent<YouTubePlayer>) => {
                 event.target.setVolume(volume[0]);
@@ -170,6 +176,12 @@ export function TrackPlayer({
               }}
               onError={(error: YouTubeEvent<any>) => {
                 console.error('YouTube player error:', error);
+                setIsPlaying(false);
+                setTimeout(() => {
+                  if (playerRef.current?.internalPlayer) {
+                    playerRef.current.internalPlayer.loadVideoById(getYouTubeID(url));
+                  }
+                }, 1000);
               }}
             />
           </div>
@@ -200,7 +212,7 @@ export function TrackPlayer({
               value={volume}
               onValueChange={onVolumeChange}
               max={100}
-              step={1}
+              step={10}
             />
           </div>
         </div>
