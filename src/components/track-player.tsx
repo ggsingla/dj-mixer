@@ -1,10 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { VideoSearchResult, formatDuration, getVideoDetails } from "@/lib/youtube";
-import { Pause, Play, RotateCw } from "lucide-react";
+import { Pause, Play, RotateCw, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
 import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
+import { Label } from "./ui/label";
 import { Slider } from "./ui/slider";
 import { VideoSearch } from "./video-search";
 
@@ -12,8 +14,6 @@ interface TrackPlayerProps {
   title: string;
   url: string;
   onUrlChange: (url: string) => void;
-  volume: number[];
-  onVolumeChange: (value: number[]) => void;
   playerRef: React.RefObject<YouTube>;
 }
 
@@ -21,8 +21,6 @@ export function TrackPlayer({
   title,
   url,
   onUrlChange,
-  volume,
-  onVolumeChange,
   playerRef,
 }: TrackPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -30,6 +28,8 @@ export function TrackPlayer({
   const [duration, setDuration] = useState(0);
   const [seekValue, setSeekValue] = useState([0]);
   const [videoDetails, setVideoDetails] = useState<VideoSearchResult | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState([1]);
 
   const getYouTubeID = (url: string) => {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -107,6 +107,31 @@ export function TrackPlayer({
     onUrlChange(`https://www.youtube.com/watch?v=${video.id}`);
   };
 
+  const handleMuteToggle = async () => {
+    if (playerRef.current?.internalPlayer) {
+      try {
+        if (isMuted) {
+          await playerRef.current.internalPlayer.unMute();
+        } else {
+          await playerRef.current.internalPlayer.mute();
+        }
+        setIsMuted(!isMuted);
+      } catch (error) {
+        console.error('Error toggling mute:', error);
+      }
+    }
+  };
+
+  const handleTempoChange = async (value: number[]) => {
+    if (playerRef.current?.internalPlayer) {
+      try {
+        await playerRef.current.internalPlayer.setPlaybackRate(value[0]);
+        setPlaybackRate(value);
+      } catch (error) {
+        console.error('Error changing playback rate:', error);
+      }
+    }
+  };
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -170,7 +195,7 @@ export function TrackPlayer({
                 }
               }}
               onReady={(event: YouTubeEvent<YouTubePlayer>) => {
-                event.target.setVolume(volume[0]);
+                event.target.setVolume(isMuted ? 0 : 100);
                 const dur = event.target.getDuration();
                 setDuration(dur);
               }}
@@ -203,16 +228,28 @@ export function TrackPlayer({
             >
               <RotateCw className="h-4 w-4" />
             </Button>
-
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleMuteToggle}
+            >
+              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
           </div>
 
           <div className="flex-1 space-y-2">
-            <p className="text-sm font-medium">Volume</p>
+            <div className="flex items-center justify-between gap-2">
+              <Label>Tempo</Label>
+              <Badge variant="secondary" onClick={() => handleTempoChange([1])} className="cursor-pointer hover:bg-primary/20 group">
+                {playbackRate[0]}x <RotateCw strokeWidth={2.5} className="size-3 opacity-50 ml-1 group-hover:rotate-180 transition-transform duration-200 group-hover:scale-125" />
+              </Badge>
+            </div>
             <Slider
-              value={volume}
-              onValueChange={onVolumeChange}
-              max={100}
-              step={10}
+              value={playbackRate}
+              onValueChange={handleTempoChange}
+              min={0.25}
+              max={2}
+              step={0.01}
             />
           </div>
         </div>

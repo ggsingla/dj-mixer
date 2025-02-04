@@ -102,7 +102,7 @@ export function VideoSearch({ onVideoSelect }: VideoSearchProps) {
                   alt={selectedVideo.title}
                   className="w-6 h-6 object-cover rounded"
                 />
-                <span className="truncate w-[200px]">{selectedVideo.title}</span>
+                <span className="truncate w-[200px] text-left">{selectedVideo.title}</span>
               </div>
             ) : (
               "Add a song..."
