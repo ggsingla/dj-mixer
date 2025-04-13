@@ -1,5 +1,28 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+🎧 **DJ Mixer Web App** 🎛️
+
+This is a web-based DJ Mixer application built using modern front-end technologies. Mix tracks like a pro right in your browser with any audio files or API keys or any DJ skills.
+
+**Features:**
+
+- Two independent track players
+- Song library with search functionality
+- Crossfader for smooth transitions between tracks
+- Dynamic track backgrounds based on album art
+- Tempo control for each track
+
+**Tech Stack:**
+
+- [Next.js](https://nextjs.org/) (React Framework)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/) for styling
+- [Recoil](https://recoiljs.org/) for state management
+- [React Query](https://tanstack.com/query/latest) & [Axios](https://axios-http.com/) for data fetching
+- [Bun](https://bun.sh/) for package management
+
+---
+
 ## Getting Started
 
 First, run the development server:
@@ -29,8 +52,13 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Contributing ✨
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+We welcome contributions from the community! If you'd like to help improve this DJ Mixer project, please follow these steps:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  **Fork** the repository.
+2.  Create a new **branch** for your feature or bug fix (`git checkout -b feature/your-feature-name`).
+3.  Make your changes. Remember we use `bun` for package management!
+4.  Push your branch and open a **Pull Request** 🚀.
+
+We appreciate your help in making this project better!
