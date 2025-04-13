@@ -22,6 +22,12 @@ interface SongLibraryProps {
   onAddToTrack2: (song: SongSearchResult) => void
 }
 
+const formatDuration = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
 export function SongLibrary({
   onAddToTrack1,
   onAddToTrack2,
@@ -86,7 +92,7 @@ export function SongLibrary({
                           .map((artist) => artist.name)
                           .join(', ')}
                       </TableCell>
-                      <TableCell>{song.duration}</TableCell>
+                      <TableCell>{formatDuration(Number(song.duration))}</TableCell>
                       <TableCell className='text-right'>
                         <div className='flex justify-end gap-2'>
                           <Button
