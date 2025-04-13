@@ -1,14 +1,13 @@
 import { crossfaderValueAtom } from "@/store/atoms";
 import { useEffect, useRef, useState } from "react";
-import YouTube from "react-youtube";
 import { useRecoilState } from "recoil";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Slider } from "./ui/slider";
 
 interface CrossfaderProps {
-  player1Ref: React.RefObject<YouTube>;
-  player2Ref: React.RefObject<YouTube>;
+  player1Ref: React.RefObject<HTMLAudioElement>;
+  player2Ref: React.RefObject<HTMLAudioElement>;
 }
 
 export function Crossfader({
@@ -23,10 +22,10 @@ export function Crossfader({
   const handleCrossfade = (newValue: number[]) => {
     setCrossfaderValue(newValue[0]);
     if (player1Ref.current && player2Ref.current) {
-      const vol1 = (100 - newValue[0]) / 100;
-      const vol2 = newValue[0] / 100;
-      player1Ref.current.internalPlayer.setVolume(vol1 * 100);
-      player2Ref.current.internalPlayer.setVolume(vol2 * 100);
+      const vol1 = Math.max(0, Math.min(1, (100 - newValue[0]) / 100));
+      const vol2 = Math.max(0, Math.min(1, newValue[0] / 100));
+      player1Ref.current.volume = vol1;
+      player2Ref.current.volume = vol2;
     }
   };
 
@@ -70,10 +69,10 @@ export function Crossfader({
   };
 
   return (
-    <Card className="mt-8">
+    <Card>
       <CardContent className="p-6">
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
               onClick={() => handleTrackButton(0)}
@@ -81,7 +80,6 @@ export function Crossfader({
             >
               Track 1
             </Button>
-            <h2 className="text-xl font-semibold">Crossfader</h2>
             <Button
               variant="outline"
               onClick={() => handleTrackButton(100)}
@@ -93,14 +91,10 @@ export function Crossfader({
           <Slider
             value={[crossfaderValue]}
             onValueChange={handleCrossfade}
+            min={0}
             max={100}
-            step={5}
-            className="my-4"
+            step={1}
           />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Track 1</span>
-            <span>Track 2</span>
-          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,10 +1,13 @@
 'use client';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from "next-themes";
-import React from 'react';
+import { ReactNode, useState } from 'react';
 import { RecoilRoot } from 'recoil';
 
-const Providers = ({ children }: { children: React.ReactNode }) => {
+export function Providers({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient())
+
   return (
     <ThemeProvider
       attribute="class"
@@ -12,9 +15,11 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       enableSystem
       disableTransitionOnChange
     >
-      <RecoilRoot>{children}</RecoilRoot>
+      <RecoilRoot>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </RecoilRoot>
     </ThemeProvider>
   );
-};
-
-export default Providers;
+}
