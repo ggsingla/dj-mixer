@@ -2,7 +2,8 @@ import { formatDuration, useSongDetails } from "@/queries/songs";
 import { crossfaderValueAtom } from "@/store/atoms";
 import { SongSearchResult } from "@/types/song";
 import { Pause, Play, RotateCw, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import ReactHowler from "react-howler";
 import { useRecoilValue } from "recoil";
 import { SongSearch } from "./song-search";
 import { Badge } from "./ui/badge";
@@ -15,7 +16,6 @@ interface TrackPlayerProps {
   title: string;
   url: string;
   onUrlChange: (url: string) => void;
-  playerRef: React.RefObject<HTMLAudioElement>;
   isLeftTrack: boolean;
 }
 
@@ -23,7 +23,6 @@ export function TrackPlayer({
   title,
   url,
   onUrlChange,
-  playerRef,
   isLeftTrack,
 }: TrackPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,64 +31,98 @@ export function TrackPlayer({
   const [seekValue, setSeekValue] = useState([0]);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState([1]);
-  const [isClient, setIsClient] = useState(false);
   const crossfaderValue = useRecoilValue(crossfaderValueAtom);
+  const playerRef = useRef<ReactHowler>(null);
 
   const { data: songDetails } = useSongDetails(url);
 
+  // Initialize state from localStorage
   useEffect(() => {
-    setIsClient(true);
+    const savedState = localStorage.getItem(`track-player-${isLeftTrack ? 'left' : 'right'}`);
+    if (savedState) {
+      const { currentTime, isPlaying } = JSON.parse(savedState);
+      setCurrentTime(currentTime);
+      setSeekValue([currentTime]);
+      if (isPlaying) {
+        setIsPlaying(true);
+      }
+    }
   }, []);
+
+  // Save state to localStorage
+  useEffect(() => {
+    const state = {
+      currentTime,
+      isPlaying,
+      url
+    };
+    localStorage.setItem(`track-player-${isLeftTrack ? 'left' : 'right'}`, JSON.stringify(state));
+  }, [currentTime, isPlaying, url]);
+
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const savedState = localStorage.getItem(`track-player-${isLeftTrack ? 'left' : 'right'}`);
+        if (savedState) {
+          const { currentTime, isPlaying } = JSON.parse(savedState);
+          setCurrentTime(currentTime);
+          setSeekValue([currentTime]);
+          if (isPlaying) {
+            setIsPlaying(true);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isLeftTrack]);
 
   // Reset track player when song changes
   useEffect(() => {
-    if (playerRef.current) {
-      playerRef.current.currentTime = 0;
+    const savedState = localStorage.getItem(`track-player-${isLeftTrack ? 'left' : 'right'}`);
+    if (!savedState || JSON.parse(savedState).url !== url) {
       setSeekValue([0]);
       setCurrentTime(0);
       setIsPlaying(false);
     }
-  }, [url, playerRef]);
+  }, [url]);
 
   useEffect(() => {
-    if (!isClient) return;
-
     const interval = setInterval(() => {
       if (playerRef.current && isPlaying) {
-        setCurrentTime(playerRef.current.currentTime);
-        setSeekValue([playerRef.current.currentTime]);
+        const seek = playerRef.current.seek();
+        if (typeof seek === 'number') {
+          setCurrentTime(seek);
+          setSeekValue([seek]);
+        }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, playerRef, isClient]);
+  }, [isPlaying]);
 
   const calculateVolume = () => {
     if (isMuted) return 0;
     // For left track (Track 1), volume decreases as crossfader value increases
     if (isLeftTrack) {
-      return Math.max(0, Math.min(100, 100 - crossfaderValue));
+      return Math.max(0, Math.min(1, (100 - crossfaderValue) / 100));
     }
     // For right track (Track 2), volume increases as crossfader value increases
-    return Math.max(0, Math.min(100, crossfaderValue));
+    return Math.max(0, Math.min(1, crossfaderValue / 100));
   };
 
   const handlePlayPause = () => {
-    if (playerRef.current) {
-      if (isPlaying) {
-        playerRef.current.pause();
-      } else {
-        playerRef.current.play();
-        playerRef.current.volume = calculateVolume() / 100;
-      }
-      setIsPlaying(!isPlaying);
-    }
+    setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (value: number[]) => {
     if (playerRef.current) {
       const time = value[0];
-      playerRef.current.currentTime = time;
+      playerRef.current.seek(time);
       setSeekValue(value);
       setCurrentTime(time);
     }
@@ -97,7 +130,7 @@ export function TrackPlayer({
 
   const handleReset = () => {
     if (playerRef.current) {
-      playerRef.current.currentTime = 0;
+      playerRef.current.seek(0);
       setSeekValue([0]);
       setCurrentTime(0);
     }
@@ -108,17 +141,11 @@ export function TrackPlayer({
   };
 
   const handleMuteToggle = () => {
-    if (playerRef.current) {
-      playerRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
+    setIsMuted(!isMuted);
   };
 
   const handleTempoChange = (value: number[]) => {
-    if (playerRef.current) {
-      playerRef.current.playbackRate = value[0];
-      setPlaybackRate(value);
-    }
+    setPlaybackRate(value);
   };
 
   const formatTime = (seconds: number) => {
@@ -126,12 +153,6 @@ export function TrackPlayer({
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
-  useEffect(() => {
-    if (playerRef.current) {
-      playerRef.current.volume = calculateVolume() / 100;
-    }
-  }, [crossfaderValue, playerRef]);
 
   return (
     <Card>
@@ -160,19 +181,25 @@ export function TrackPlayer({
           </div>
         )}
 
-        {isClient && (
-          <audio
+        {url && songDetails?.downloadUrl[4].url && (
+          <ReactHowler
             ref={playerRef}
-            src={songDetails?.downloadUrl[4].url}
-            onLoadedMetadata={(e) => {
-              setDuration(e.currentTarget.duration);
+            src={songDetails.downloadUrl[4].url}
+            playing={isPlaying}
+            mute={isMuted}
+            volume={calculateVolume()}
+            rate={playbackRate[0]}
+            onLoad={() => {
+              if (playerRef.current) {
+                setDuration(playerRef.current.duration());
+              }
             }}
-            onEnded={() => {
+            onEnd={() => {
               setIsPlaying(false);
               handleReset();
             }}
-            onError={(e) => {
-              console.error('Audio player error:', e);
+            onLoadError={(id, error) => {
+              console.error('Audio player error:', error);
               setIsPlaying(false);
             }}
           />
