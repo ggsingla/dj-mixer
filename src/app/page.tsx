@@ -1,5 +1,6 @@
 "use client";
 import { Crossfader } from "@/components/crossfader";
+import { SongLibrary } from "@/components/song-library";
 import { TrackPlayer } from "@/components/track-player";
 import { useRef, useState } from "react";
 
@@ -17,16 +18,12 @@ export default function Home() {
           <TrackPlayer
             title="Track 1"
             url={track1URL}
-            onUrlChange={setTrack1URL}
-            playerRef={player1Ref}
             isLeftTrack={true}
           />
 
           <TrackPlayer
             title="Track 2"
             url={track2URL}
-            onUrlChange={setTrack2URL}
-            playerRef={player2Ref}
             isLeftTrack={false}
           />
         </div>
@@ -34,6 +31,11 @@ export default function Home() {
         <Crossfader
           player1Ref={player1Ref}
           player2Ref={player2Ref}
+        />
+
+        <SongLibrary
+          onAddToTrack1={(song) => setTrack1URL(song.id)}
+          onAddToTrack2={(song) => setTrack2URL(song.id)}
         />
       </main>
     </div>

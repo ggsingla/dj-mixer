@@ -1,11 +1,10 @@
 import { formatDuration, useSongDetails } from "@/queries/songs";
 import { crossfaderValueAtom } from "@/store/atoms";
-import { SongSearchResult } from "@/types/song";
 import { Pause, Play, RotateCw, Volume2, VolumeX } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import ReactHowler from "react-howler";
 import { useRecoilValue } from "recoil";
-import { SongSearch } from "./song-search";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -15,14 +14,12 @@ import { Slider } from "./ui/slider";
 interface TrackPlayerProps {
   title: string;
   url: string;
-  onUrlChange: (url: string) => void;
   isLeftTrack: boolean;
 }
 
 export function TrackPlayer({
   title,
   url,
-  onUrlChange,
   isLeftTrack,
 }: TrackPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -136,10 +133,6 @@ export function TrackPlayer({
     }
   };
 
-  const handleSongSelect = (song: SongSearchResult) => {
-    onUrlChange(song.id);
-  };
-
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
   };
@@ -159,7 +152,23 @@ export function TrackPlayer({
       <CardContent className="p-6 space-y-4">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold">{title}</h2>
-          <SongSearch onVideoSelect={handleSongSelect} />
+          {songDetails && (
+            <div className="flex items-center gap-2">
+              <Image
+                src={songDetails.image[0].url}
+                alt={songDetails.name}
+                className="w-8 h-8 object-cover rounded"
+                width={32}
+                height={32}
+              />
+              <div className="flex flex-col">
+                <span className="font-medium">{songDetails.name}</span>
+                <span className="text-sm text-muted-foreground">
+                  {songDetails.artists.all.slice(0, 2).map((artist) => artist.name).join(', ')}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {songDetails && (
