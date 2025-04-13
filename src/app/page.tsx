@@ -12,10 +12,8 @@ export default function Home() {
   const player2Ref = useRef<YouTube | null>(null);
 
   return (
-    <div className="min-h-screen p-8 bg-background">
-      <main className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-4xl font-bold text-center mb-12">DJ Mixer</h1>
-
+    <div className="py-8 bg-background">
+      <main className="container mx-auto space-y-8">
         <div className="grid md:grid-cols-2 gap-8">
           <TrackPlayer
             title="Track 1"
